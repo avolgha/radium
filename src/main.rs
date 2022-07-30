@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         fs::write(consts::get_local_mirror_file_path(), json)
             .expect("could not write to config file.");
 
-        sh.note("Added mirror to local mirror list.");
+        sh.status("Success", "Added mirror to local mirror list.");
     } else if let Some(list) = args.subcommand_matches("remove-mirror") {
         let result = list
             .get_one::<String>("index")
@@ -79,12 +79,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             fs::write(consts::get_local_mirror_file_path(), json)
                 .expect("could not write to config file.");
 
-            sh.note("Removed mirror from local mirror list.");
-            sh.note(format!("Mirror: {}", mirror_url));
+            sh.status("Success", "Removed mirror from local mirror list.");
+            sh.status("Success", format!("Mirror: {}", mirror_url));
         }
     } else if let Some(_) = args.subcommand_matches("list-mirrors") {
         let max_len = 3;
-        sh.note(" (idx) | (url)");
+        sh.status("Mirrors", " (idx) | (url)");
         for i in 0..mirrors.len() {
             let mut fmt = "   ".to_owned();
 
@@ -100,7 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             fmt.push_str(mirror_url.as_str());
 
-            sh.note(format!("{}", fmt));
+            sh.status("Mirrors", format!("{}", fmt));
         }
     } else if let Some(list) = args.subcommand_matches("install") {
         if mirrors.len() == 0 {
@@ -114,12 +114,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .get_one::<String>("package")
             .expect("could not retrieve package name.");
 
-        sh.note(format!("Checking for `{}`...", package));
+        sh.status("Install", format!("Checking for `{}`...", package));
 
         match mirror::get_repository_with_package(&mirrors, package.to_owned()).await {
             Ok((url, meta, index)) => {
-                sh.note(format!("Found package on mirror at index {}.", index));
-                sh.note(format!("Downloading from here: {}", url));
+                sh.status("Install", format!("Found package on mirror at index {}.", index));
+                sh.status("Install", format!("Downloading from here: {}", url));
 
                 let package_file = mirror::file_from_package_name(&meta, package.to_owned());
                 let download_url = mirror::format_download_url(url, package_file.to_owned());
@@ -137,8 +137,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                         io::copy(&mut data.as_bytes(), &mut file)?;
 
-                        sh.note("File was downloaded.");
-                        sh.note(format!("Path: {}", fpath.as_os_str().to_str().expect("")))
+                        sh.status("Install", "File was downloaded.");
+                        sh.status_with_color("Path", fpath.as_os_str().to_str().expect(""), termcolor::Color::Cyan)
                     }
                     Err(e) => {
                         sh.error(format!(

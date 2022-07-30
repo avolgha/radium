@@ -2,4 +2,4 @@
 
 # start a web server on the current directory
 
-python -m http.server
+python3 -m http.server

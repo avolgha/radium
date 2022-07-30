@@ -1,3 +1,17 @@
+/*
+ *
+ * This file was mainly taken from cargo.
+ * Later it was modified to satisfy my requirements.
+ *
+ * Original file link: https://github.com/rust-lang/cargo/blob/master/src/cargo/core/shell.rs
+ * Original project link: https://github.com/rust-lang/cargo
+ *
+ * The project is licensed under MIT and Apache-2 License
+ *
+ * (If there are any problems with the file, feel free to contact me through an issue.)
+ *
+ */
+
 use std::fmt;
 use std::io::prelude::*;
 
@@ -281,6 +295,7 @@ impl Shell {
     }
 
     /// Prints a cyan 'note' message.
+    #[allow(dead_code)]
     pub fn note<T: fmt::Display>(&mut self, message: T) {
         self.print(&"note", Some(&message), Cyan, false)
     }

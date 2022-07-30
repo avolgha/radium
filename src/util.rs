@@ -49,7 +49,7 @@ pub fn accept(message: &str) -> bool {
     let mut sh = crate::shell::Shell::new();
 
     while result == Check::INVALID {
-        sh.print(&"accept", Some(&message), termcolor::Color::Magenta, false);
+        sh.status_with_color("Accept", message, termcolor::Color::Magenta);
         let c =
             char::from_u32(unsafe { *read_line() } as u32).expect("could not parse char from u32.");
         result = check(String::from(c));
