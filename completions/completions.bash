@@ -9,18 +9,6 @@ _radium_completions() {
   local compline="${COMP_WORDS[@]:1:$COMP_CWORD-1}"
 
   case "$compline" in
-    'remove-mirror'*)
-      while read; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A index -- "$cur" )
-      ;;
-
-    'add-mirror'*)
-      while read; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A url -- "$cur" )
-      ;;
-
-    'install'*)
-      while read; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A package -- "$cur" )
-      ;;
-
     *)
       while read; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "add-mirror remove-mirror list-mirrors install" -- "$cur" )
       ;;
