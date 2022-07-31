@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# this script helps the user to install/ build the executable by there self.
+
 error() {
 	echo -e "\e[1;31m[error]\e[0m $*"
 }
