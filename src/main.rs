@@ -11,13 +11,14 @@ use nix::unistd::Uid;
 use std::fs;
 use std::fs::File;
 use std::io;
+use std::process::Command;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut sh = crate::shell::Shell::new();
 
     if !Uid::effective().is_root() {
-        sh.error("You need to run this executable as root.");
+        sh.status_err("You need to run this executable as root.");
         return Ok(());
     }
 
@@ -37,8 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         if !mirror::check_mirror(&url).await {
-            sh.error("Could not reach the mirror.");
-            sh.error("Is it valid? Does it contain a meta file?");
+            sh.status_err("Could not reach the mirror.");
+            sh.status_err("Is it valid? Does it contain a meta file?");
             return Ok(());
         }
 
@@ -61,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("could not parse usize from string.");
 
         if index >= mirrors.len() {
-            sh.error(format!(
+            sh.status_err(format!(
                 "Index is out of range. (Max Length: {})",
                 mirrors.len()
             ));
@@ -118,7 +119,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         match mirror::get_repository_with_package(&mirrors, package.to_owned()).await {
             Ok((url, meta, index)) => {
-                sh.status("Install", format!("Found package on mirror at index {}.", index));
+                sh.status(
+                    "Install",
+                    format!("Found package on mirror at index {}.", index),
+                );
                 sh.status("Install", format!("Downloading from here: {}", url));
 
                 let package_file = mirror::file_from_package_name(&meta, package.to_owned());
@@ -132,34 +136,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 match reqwest::get(download_url).await {
                     Ok(response) => {
                         let data = response.text().await?;
-                        let fpath = util::create_tmp_file_in_opt(format!("{}.package", package));
+                        let fpath =
+                            util::create_tmp_file_in_opt(format!("{}.package_install", package));
                         let mut file = File::create(&fpath)?;
 
                         io::copy(&mut data.as_bytes(), &mut file)?;
 
                         sh.status("Install", "File was downloaded.");
-                        sh.status_with_color("Path", fpath.as_os_str().to_str().expect(""), termcolor::Color::Cyan)
+                        sh.status_with_color(
+                            "Path",
+                            fpath.as_os_str().to_str().expect(""),
+                            termcolor::Color::Cyan,
+                        );
+                    
+                        let cmd = Command::new("sh")
+                                        .arg(format!("{}", fpath.to_str().expect("could not format PathBuf.")))
+                                        .current_dir("/")
+                                        .output()
+                                        .expect("failed to run command.");
+                        let exit_code = cmd.status.code().expect("could not get status code from command.");
+
+                        if exit_code == 0 {
+                            sh.status("Finished", "Package was installed successfully");   
+                        } else {
+                            sh.status_err(format!("Installation-Script ended with error code `{}`.", exit_code));
+                            println!("{}", String::from_utf8(cmd.stderr)?);
+                        }
                     }
                     Err(e) => {
-                        sh.error(format!(
+                        sh.status_err(format!(
                             "Got error while downloading file. (Status Code: {})",
                             e.status().expect("could not retireve status code").as_str()
                         ));
-                        sh.error(format!("> {}", e.to_string()));
+                        sh.status_err(format!("> {}", e.to_string()));
                     }
                 }
             }
             Err(err) => {
-                sh.error(format!(
+                sh.status_err(format!(
                     "There was an error while finding the package: {}",
                     err
                 ));
             }
         }
     } else {
-        sh.error("Please specify the command you want to execute.");
-        sh.error("You can find a list of commands in the help manual:");
-        sh.error("> radium --help");
+        sh.status_err("Please specify the command you want to execute.");
+        sh.status_err("You can find a list of commands in the help manual:");
+        sh.status_err("> radium --help");
     }
 
     Ok(())

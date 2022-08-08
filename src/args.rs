@@ -20,5 +20,6 @@ pub fn setup_argument_parser() -> ArgMatches {
             Command::new("install")
                 .about("install a package from any mirror")
                 .arg(Arg::new("package").required(true)),
-        ).get_matches()
+        )
+        .get_matches()
 }

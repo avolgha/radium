@@ -235,6 +235,13 @@ impl Shell {
         self.print(&status, Some(&message), Green, true)
     }
 
+    pub fn status_err<U>(&mut self, message: U)
+    where
+        U: fmt::Display,
+    {
+        self.print(&"Error", Some(&message), Red, true)
+    }
+
     #[allow(dead_code)]
     pub fn status_header<T>(&mut self, status: T)
     where
@@ -278,6 +285,7 @@ impl Shell {
     }
 
     /// Prints a red 'error' message.
+    #[allow(dead_code)]
     pub fn error<T: fmt::Display>(&mut self, message: T) {
         if self.needs_clear {
             self.err_erase_line();
